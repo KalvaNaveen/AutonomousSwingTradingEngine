@@ -28,6 +28,7 @@ C:\Projects\AutonomousTradingEngine\obj\Debug\net8.0\AutonomousTradingEngine.Ass
 C:\Projects\AutonomousTradingEngine\obj\Debug\net8.0\AutonomousTradingEngine.csproj.CoreCompileInputs.cache
 C:\Projects\AutonomousTradingEngine\obj\Debug\net8.0\AutonomousTradingEngine.MvcApplicationPartsAssemblyInfo.cs
 C:\Projects\AutonomousTradingEngine\obj\Debug\net8.0\AutonomousTradingEngine.MvcApplicationPartsAssemblyInfo.cache
+C:\Projects\AutonomousTradingEngine\obj\Debug\net8.0\AutonomousTradingEngine.sourcelink.json
 C:\Projects\AutonomousTradingEngine\obj\Debug\net8.0\staticwebassets.build.json
 C:\Projects\AutonomousTradingEngine\obj\Debug\net8.0\staticwebassets.development.json
 C:\Projects\AutonomousTradingEngine\obj\Debug\net8.0\staticwebassets\msbuild.AutonomousTradingEngine.Microsoft.AspNetCore.StaticWebAssets.props

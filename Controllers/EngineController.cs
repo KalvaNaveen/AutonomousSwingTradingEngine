@@ -63,9 +63,12 @@ namespace AutonomousTradingEngine.Controllers
             return Ok(trades);
         }
 
+      
+
         [HttpPost("trigger-scan")]
-        public async Task<IActionResult> TriggerManualScan()
+        public IActionResult TriggerManualScan() // Removed 'async Task<>'
         {
+            // Fire and forget the background worker
             _ = _worker.ExecuteTradingRoutineAsync(default);
             return Ok(new { Message = "Manual 3:15 PM Scan triggered asynchronously." });
         }
