@@ -30,12 +30,29 @@ var app = builder.Build();
 app.UseDeveloperExceptionPage();
 
 // 6. Automatically Create Database Tables & Seed Data if They Don't Exist
+// 6. Automatically Create Database Tables & Seed Data
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.EnsureCreated(); // <--- Creates 'EngineConfigs' and 'TradeLogs' tables automatically
+    
+    try 
+    {
+        // 1. Drop the ghost tracking table left over by the previous deployment
+        db.Database.ExecuteSqlRaw("DROP TABLE IF EXISTS \"__EFMigrationsHistory\";");
+    } 
+    catch 
+    { 
+        // Ignore if it doesn't exist
+    }
+
+    // 2. Now that the database is truly empty, this will successfully build your EngineConfigs and TradeLogs tables
+    db.Database.EnsureCreated(); 
 }
 
+app.UseRouting();
+app.MapControllers();
+
+app.Run();
 app.UseRouting();
 app.MapControllers();
 
