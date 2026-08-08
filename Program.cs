@@ -9,10 +9,10 @@ builder.Services.AddControllers();
 builder.Services.AddHttpClient<MarketDataService>();
 builder.Services.AddHttpClient<KiteService>();
 
-// 2. Resolve and Convert Connection String from Render Environment Variables
+// 2. Resolve Connection String from Environment Variables
 var rawConnectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
     ?? builder.Configuration["DATABASE_URL"]
-    ?? throw new InvalidOperationException("Database connection string 'ConnectionStrings__DefaultConnection' is missing from Environment Variables.");
+    ?? throw new InvalidOperationException("Database connection string missing.");
 
 string connectionString = ConvertPostgresUrlToConnectionString(rawConnectionString);
 
@@ -26,7 +26,10 @@ builder.Services.AddHostedService(provider => provider.GetRequiredService<Tradin
 
 var app = builder.Build();
 
-// 5. Auto-Run EF Core Migrations on Startup
+// 5. Enable Detailed Exception Pages for Debugging
+app.UseDeveloperExceptionPage();
+
+// 6. Auto-Run EF Core Migrations on Startup
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -38,12 +41,12 @@ app.MapControllers();
 
 app.Run();
 
-// --- HELPER FUNCTION: Convert postgres:// URI to Npgsql Key-Value String ---
+// --- HELPER FUNCTION: Convert postgres:// URI to Npgsql String with SSL Trust ---
 static string ConvertPostgresUrlToConnectionString(string rawUrl)
 {
     if (!rawUrl.StartsWith("postgres://") && !rawUrl.StartsWith("postgresql://"))
     {
-        return rawUrl; // Already in Host=...;Database=... format
+        return rawUrl;
     }
 
     var uri = new Uri(rawUrl);
@@ -54,5 +57,6 @@ static string ConvertPostgresUrlToConnectionString(string rawUrl)
     var username = userInfo[0];
     var password = userInfo.Length > 1 ? userInfo[1] : "";
 
-    return $"Host={host};Port={port};Database={database};Username={username};Password={password};Ssl Mode=Prefer;";
+    // Added 'Ssl Mode=Require;Trust Server Certificate=true;' for Render External Database compatibility
+    return $"Host={host};Port={port};Database={database};Username={username};Password={password};Ssl Mode=Require;Trust Server Certificate=true;";
 }
