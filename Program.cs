@@ -3,7 +3,7 @@ using AutonomousTradingEngine.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
 // 1. Add Controllers and HTTP Clients
 builder.Services.AddControllers();
 builder.Services.AddHttpClient<MarketDataService>();
