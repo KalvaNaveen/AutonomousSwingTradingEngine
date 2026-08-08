@@ -71,7 +71,7 @@ namespace AutonomousTradingEngine.Services
             }
 
             // Load Master Watchlist
-            var watchlist = GetMasterWatchlist();
+            var watchlist = GetMasterWatchlist(db);
             var candidates = new List<ScanCandidate>();
 
             foreach (var ticker in watchlist)
@@ -134,15 +134,18 @@ namespace AutonomousTradingEngine.Services
                         });
                     }
                 }
+            
 
                 await db.SaveChangesAsync(cancellationToken);
             }
         }
 
-        private List<string> GetMasterWatchlist()
+        private List<string> GetMasterWatchlist(ApplicationDbContext db)
         {
-            // Fallback list of key momentum universe tickers if local file is absent
-            return new List<string> { "BSE", "BHARATFORG", "FEDERALBNK", "GLENMARK", "KEI", "MCX", "NATIONALUM", "POLYCAB", "ABB", "ADANIPOWER" };
+            var symbols = db.WatchlistSymbols.Select(w => w.Ticker).ToList();
+            
+            // Add ".NS" suffix for Yahoo Finance compatibility if not already present
+            return symbols.Select(s => s.EndsWith(".NS") ? s : $"{s}.NS").ToList();
         }
     }
 }

@@ -5,6 +5,11 @@ C:\Projects\AutonomousTradingEngine\bin\Debug\net8.0\AutonomousTradingEngine.dep
 C:\Projects\AutonomousTradingEngine\bin\Debug\net8.0\AutonomousTradingEngine.runtimeconfig.json
 C:\Projects\AutonomousTradingEngine\bin\Debug\net8.0\AutonomousTradingEngine.dll
 C:\Projects\AutonomousTradingEngine\bin\Debug\net8.0\AutonomousTradingEngine.pdb
+C:\Projects\AutonomousTradingEngine\bin\Debug\net8.0\ClosedXML.dll
+C:\Projects\AutonomousTradingEngine\bin\Debug\net8.0\ClosedXML.Parser.dll
+C:\Projects\AutonomousTradingEngine\bin\Debug\net8.0\DocumentFormat.OpenXml.dll
+C:\Projects\AutonomousTradingEngine\bin\Debug\net8.0\DocumentFormat.OpenXml.Framework.dll
+C:\Projects\AutonomousTradingEngine\bin\Debug\net8.0\ExcelNumberFormat.dll
 C:\Projects\AutonomousTradingEngine\bin\Debug\net8.0\Microsoft.AspNetCore.OpenApi.dll
 C:\Projects\AutonomousTradingEngine\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.dll
 C:\Projects\AutonomousTradingEngine\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Abstractions.dll
@@ -18,9 +23,13 @@ C:\Projects\AutonomousTradingEngine\bin\Debug\net8.0\Microsoft.Extensions.Option
 C:\Projects\AutonomousTradingEngine\bin\Debug\net8.0\Microsoft.OpenApi.dll
 C:\Projects\AutonomousTradingEngine\bin\Debug\net8.0\Npgsql.dll
 C:\Projects\AutonomousTradingEngine\bin\Debug\net8.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
+C:\Projects\AutonomousTradingEngine\bin\Debug\net8.0\Otp.NET.dll
+C:\Projects\AutonomousTradingEngine\bin\Debug\net8.0\RBush.dll
+C:\Projects\AutonomousTradingEngine\bin\Debug\net8.0\SixLabors.Fonts.dll
 C:\Projects\AutonomousTradingEngine\bin\Debug\net8.0\Swashbuckle.AspNetCore.Swagger.dll
 C:\Projects\AutonomousTradingEngine\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerGen.dll
 C:\Projects\AutonomousTradingEngine\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerUI.dll
+C:\Projects\AutonomousTradingEngine\bin\Debug\net8.0\System.IO.Packaging.dll
 C:\Projects\AutonomousTradingEngine\obj\Debug\net8.0\AutonomousTradingEngine.csproj.AssemblyReference.cache
 C:\Projects\AutonomousTradingEngine\obj\Debug\net8.0\AutonomousTradingEngine.GeneratedMSBuildEditorConfig.editorconfig
 C:\Projects\AutonomousTradingEngine\obj\Debug\net8.0\AutonomousTradingEngine.AssemblyInfoInputs.cache

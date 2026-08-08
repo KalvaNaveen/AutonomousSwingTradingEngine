@@ -4,6 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using AutonomousTradingEngine.Data;
 using AutonomousTradingEngine.Models;
 using AutonomousTradingEngine.Services;
+using ClosedXML.Excel;
+using Microsoft.AspNetCore.Http;
+using System.IO;
 
 namespace AutonomousTradingEngine.Controllers
 {
@@ -13,11 +16,14 @@ namespace AutonomousTradingEngine.Controllers
     {
         private readonly ApplicationDbContext _db;
         private readonly TradingEngineWorker _worker;
+        private readonly BacktestService _backtestService;
 
-        public EngineController(ApplicationDbContext db, TradingEngineWorker worker)
+
+        public EngineController(ApplicationDbContext db, TradingEngineWorker worker, BacktestService backtestService)
         {
             _db = db;
-            _worker = worker;
+            _worker = worker;            
+            _backtestService = backtestService;
         }
 
         [HttpGet("status")]
@@ -80,5 +86,53 @@ namespace AutonomousTradingEngine.Controllers
             // Logic to hit Zerodha API and sell at market price, then update database
             return Ok(new { Message = $"{ticker} position closed manually." });
         }
+
+        [HttpPost("upload-watchlist")]
+        public async Task<IActionResult> UploadWatchlist(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("No file uploaded.");
+
+            var symbols = new List<string>();
+
+            using (var stream = new MemoryStream())
+            {
+                await file.CopyToAsync(stream);
+                using (var workbook = new XLWorkbook(stream))
+                {
+                    var worksheet = workbook.Worksheet(1); // Get first sheet
+                    var rows = worksheet.RangeUsed().RowsUsed().Skip(1); // Skip header row
+
+                    foreach (var row in rows)
+                    {
+                        var symbol = row.Cell(1).GetString().Trim(); // Assumes symbols are in Column A
+                        if (!string.IsNullOrEmpty(symbol) && symbol.ToUpper() != "LTP")
+                        {
+                            symbols.Add(symbol);
+                        }
+                    }
+                }
+            }
+
+            // Clear old watchlist and insert new
+            _db.WatchlistSymbols.RemoveRange(_db.WatchlistSymbols);
+            
+            var newWatchlist = symbols.Select(s => new WatchlistSymbol { Ticker = s }).ToList();
+            await _db.WatchlistSymbols.AddRangeAsync(newWatchlist);
+            
+            await _db.SaveChangesAsync();
+
+            return Ok(new { Message = $"Successfully uploaded and parsed {symbols.Count} stocks." });
+        }
+
+
+        [HttpPost("backtest")]
+        public async Task<IActionResult> RunBacktest([FromBody] BacktestRequest request)
+        {
+            var result = await _backtestService.RunBacktestAsync(request);
+            return Ok(result);
+        }
     }
+
+    
 }

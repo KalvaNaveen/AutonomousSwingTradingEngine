@@ -23,7 +23,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // 4. Register Engine Background Worker
 builder.Services.AddSingleton<TradingEngineWorker>();
 builder.Services.AddHostedService(provider => provider.GetRequiredService<TradingEngineWorker>());
-
+builder.Services.AddScoped<BacktestService>();
 var app = builder.Build();
 
 // 5. Enable Detailed Exception Pages for Debugging

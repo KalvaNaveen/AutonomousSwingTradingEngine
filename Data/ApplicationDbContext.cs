@@ -12,7 +12,7 @@ namespace AutonomousTradingEngine.Data
 
         public DbSet<EngineConfig> EngineConfigs { get; set; } = null!;
         public DbSet<TradeLog> TradeLogs { get; set; } = null!;
-
+        public DbSet<WatchlistSymbol> WatchlistSymbols { get; set; } = null!;
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
