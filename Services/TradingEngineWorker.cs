@@ -77,6 +77,22 @@ namespace AutonomousTradingEngine.Services
             foreach (var ticker in watchlist)
             {
                 var candles = await _marketData.GetHistoricalDataAsync(ticker);
+
+                // --- START NEW SAFETY CHECK ---
+                if (candles == null || !candles.Any()) continue;
+
+                var latestCandle = candles.Last();
+                var todayIst = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, _istZone).Date;
+
+                // SAFETY CHECK: Is the market actually open today?
+                // If the latest candle is not from today, the market is closed (holiday/weekend). Skip this stock.
+                if (latestCandle.Date.Date != todayIst)
+                {
+                    _logger.LogInformation($"Market appears closed for {ticker}. Latest data is from {latestCandle.Date.Date:d}. Skipping.");
+                    continue;
+                }
+                // --- END NEW SAFETY CHECK ---
+
                 var candidate = _marketData.EvaluateStrategy(ticker, candles);
                 if (candidate != null)
                 {
