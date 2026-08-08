@@ -29,11 +29,11 @@ var app = builder.Build();
 // 5. Enable Detailed Exception Pages for Debugging
 app.UseDeveloperExceptionPage();
 
-// 6. Auto-Run EF Core Migrations on Startup
+// 6. Automatically Create Database Tables & Seed Data if They Don't Exist
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.Migrate();
+    db.Database.EnsureCreated(); // <--- Creates 'EngineConfigs' and 'TradeLogs' tables automatically
 }
 
 app.UseRouting();
@@ -57,6 +57,5 @@ static string ConvertPostgresUrlToConnectionString(string rawUrl)
     var username = userInfo[0];
     var password = userInfo.Length > 1 ? userInfo[1] : "";
 
-    // Added 'Ssl Mode=Require;Trust Server Certificate=true;' for Render External Database compatibility
     return $"Host={host};Port={port};Database={database};Username={username};Password={password};Ssl Mode=Require;Trust Server Certificate=true;";
 }
