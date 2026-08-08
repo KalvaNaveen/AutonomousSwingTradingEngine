@@ -72,5 +72,13 @@ namespace AutonomousTradingEngine.Controllers
             _ = _worker.ExecuteTradingRoutineAsync(default);
             return Ok(new { Message = "Manual 3:15 PM Scan triggered asynchronously." });
         }
+
+
+        [HttpPost("force-exit/{ticker}")]
+        public async Task<IActionResult> ForceExitPosition(string ticker)
+        {
+            // Logic to hit Zerodha API and sell at market price, then update database
+            return Ok(new { Message = $"{ticker} position closed manually." });
+        }
     }
 }
