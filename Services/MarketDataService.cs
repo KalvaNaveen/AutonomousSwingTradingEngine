@@ -15,55 +15,117 @@ namespace AutonomousTradingEngine.Services
         public MarketDataService(HttpClient httpClient)
         {
             _httpClient = httpClient;
-            _httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0");
+            _httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
         }
 
-        public async Task<List<Candle>> GetHistoricalDataAsync(string symbol)
+        public async Task<List<Candle>> GetHistoricalDataAsync(string ticker, DateTime? startDate = null, DateTime? endDate = null)
         {
-            string url = $"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}.NS?interval=1d&range=6mo";
-            var response = await _httpClient.GetAsync(url);
-            if (!response.IsSuccessStatusCode) return new List<Candle>();
+            // Sanitize ticker to guarantee a clean, single .NS suffix
+            string formattedTicker = FormatYahooTicker(ticker);
+            if (string.IsNullOrEmpty(formattedTicker)) return new List<Candle>();
 
-            var json = await response.Content.ReadAsStringAsync();
-            using var doc = JsonDocument.Parse(json);
-            
-            var result = doc.RootElement.GetProperty("chart").GetProperty("result")[0];
-            var timestamps = result.GetProperty("timestamp").EnumerateArray().ToList();
-            var quote = result.GetProperty("indicators").GetProperty("quote")[0];
-
-            var opens = quote.GetProperty("open").EnumerateArray().ToList();
-            var highs = quote.GetProperty("high").EnumerateArray().ToList();
-            var lows = quote.GetProperty("low").EnumerateArray().ToList();
-            var closes = quote.GetProperty("close").EnumerateArray().ToList();
-            var volumes = quote.GetProperty("volume").EnumerateArray().ToList();
-
-            var candles = new List<Candle>();
-
-            for (int i = 0; i < timestamps.Count; i++)
+            string url;
+            if (startDate.HasValue && endDate.HasValue)
             {
-                if (closes[i].ValueKind == JsonValueKind.Null || volumes[i].ValueKind == JsonValueKind.Null) continue;
-
-                candles.Add(new Candle
-                {
-                    Date = DateTimeOffset.FromUnixTimeSeconds(timestamps[i].GetInt64()).DateTime,
-                    Open = opens[i].GetDecimal(),
-                    High = highs[i].GetDecimal(),
-                    Low = lows[i].GetDecimal(),
-                    Close = closes[i].GetDecimal(),
-                    Volume = volumes[i].GetInt64()
-                });
+                // Convert UI Start/End dates to Unix Timestamps
+                long period1 = ((DateTimeOffset)startDate.Value).ToUnixTimeSeconds();
+                long period2 = ((DateTimeOffset)endDate.Value).ToUnixTimeSeconds();
+                url = $"https://query1.finance.yahoo.com/v8/finance/chart/{formattedTicker}?interval=1d&period1={period1}&period2={period2}";
+            }
+            else
+            {
+                // Default to 2-year range for live daily 3:15 PM scans
+                url = $"https://query1.finance.yahoo.com/v8/finance/chart/{formattedTicker}?interval=1d&range=2y";
             }
 
-            return candles;
+            try
+            {
+                var response = await _httpClient.GetAsync(url);
+                if (!response.IsSuccessStatusCode) return new List<Candle>();
+
+                var json = await response.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(json);
+
+                // Safe extraction of chart result
+                if (!doc.RootElement.TryGetProperty("chart", out var chart) ||
+                    !chart.TryGetProperty("result", out var resultArr) ||
+                    resultArr.ValueKind == JsonValueKind.Null ||
+                    resultArr.GetArrayLength() == 0)
+                {
+                    return new List<Candle>();
+                }
+
+                var result = resultArr[0];
+                if (!result.TryGetProperty("timestamp", out var timestampProp) ||
+                    !result.TryGetProperty("indicators", out var indicatorsProp) ||
+                    !indicatorsProp.TryGetProperty("quote", out var quoteArr) ||
+                    quoteArr.GetArrayLength() == 0)
+                {
+                    return new List<Candle>();
+                }
+
+                var timestamps = timestampProp.EnumerateArray().ToList();
+                var quote = quoteArr[0];
+
+                if (!quote.TryGetProperty("open", out var opensProp) ||
+                    !quote.TryGetProperty("high", out var highsProp) ||
+                    !quote.TryGetProperty("low", out var lowsProp) ||
+                    !quote.TryGetProperty("close", out var closesProp) ||
+                    !quote.TryGetProperty("volume", out var volumesProp))
+                {
+                    return new List<Candle>();
+                }
+
+                var opens = opensProp.EnumerateArray().ToList();
+                var highs = highsProp.EnumerateArray().ToList();
+                var lows = lowsProp.EnumerateArray().ToList();
+                var closes = closesProp.EnumerateArray().ToList();
+                var volumes = volumesProp.EnumerateArray().ToList();
+
+                var candles = new List<Candle>();
+
+                for (int i = 0; i < timestamps.Count; i++)
+                {
+                    if (i >= opens.Count || i >= highs.Count || i >= lows.Count || i >= closes.Count || i >= volumes.Count)
+                        break;
+
+                    // Skip candles with missing/null pricing data
+                    if (closes[i].ValueKind == JsonValueKind.Null ||
+                        volumes[i].ValueKind == JsonValueKind.Null ||
+                        opens[i].ValueKind == JsonValueKind.Null ||
+                        highs[i].ValueKind == JsonValueKind.Null ||
+                        lows[i].ValueKind == JsonValueKind.Null)
+                    {
+                        continue;
+                    }
+
+                    candles.Add(new Candle
+                    {
+                        Date = DateTimeOffset.FromUnixTimeSeconds(timestamps[i].GetInt64()).DateTime,
+                        Open = opens[i].GetDecimal(),
+                        High = highs[i].GetDecimal(),
+                        Low = lows[i].GetDecimal(),
+                        Close = closes[i].GetDecimal(),
+                        Volume = volumes[i].GetInt64()
+                    });
+                }
+
+                return candles;
+            }
+            catch
+            {
+                // Return empty list on network or JSON failure to keep server processing alive
+                return new List<Candle>();
+            }
         }
 
         public ScanCandidate? EvaluateStrategy(string symbol, List<Candle> candles)
         {
-            if (candles.Count < 30) return null;
+            if (candles == null || candles.Count < 30) return null;
 
             int n = candles.Count;
             var closes = candles.Select(c => c.Close).ToList();
-            
+
             var ema10 = CalculateEMA(closes, 10);
             var ema20 = CalculateEMA(closes, 20);
             var atr10 = CalculateATR(candles, 10);
@@ -137,6 +199,21 @@ namespace AutonomousTradingEngine.Services
             }
 
             return atr.ToList();
+        }
+
+        public static string FormatYahooTicker(string ticker)
+        {
+            if (string.IsNullOrWhiteSpace(ticker)) return string.Empty;
+
+            string clean = ticker.Trim().ToUpper();
+
+            // Strip all trailing .NS instances regardless of case or duplication (.NS.NS)
+            while (clean.EndsWith(".NS"))
+            {
+                clean = clean.Substring(0, clean.Length - 3);
+            }
+
+            return $"{clean}.NS";
         }
     }
 }

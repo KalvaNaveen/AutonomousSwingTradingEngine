@@ -161,7 +161,7 @@ namespace AutonomousTradingEngine.Services
             var symbols = db.WatchlistSymbols.Select(w => w.Ticker).ToList();
             
             // Add ".NS" suffix for Yahoo Finance compatibility if not already present
-            return symbols.Select(s => s.EndsWith(".NS") ? s : $"{s}.NS").ToList();
+            return symbols.Select(MarketDataService.FormatYahooTicker).ToList();
         }
     }
 }

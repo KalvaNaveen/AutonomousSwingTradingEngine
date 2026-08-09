@@ -32,9 +32,9 @@ namespace AutonomousTradingEngine.Services
             foreach (var sym in watchlist)
             {
                 try
-                {
-                    string ticker = sym.EndsWith(".NS") ? sym : $"{sym}.NS";
-                    var candles = await _marketData.GetHistoricalDataAsync(ticker);
+                {  
+                    string ticker = MarketDataService.FormatYahooTicker(sym);
+                    var candles = await _marketData.GetHistoricalDataAsync(ticker, request.StartDate, request.EndDate);
                     
                     // Safety check added: ensure candles is not null before checking Count
                     if (candles != null && candles.Count >= 50)
