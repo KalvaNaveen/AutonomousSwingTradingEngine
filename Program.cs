@@ -30,7 +30,6 @@ var app = builder.Build();
 app.UseDeveloperExceptionPage();
 
 // 6. Automatically Create Database Tables & Seed Data if They Don't Exist
-// 6. Automatically Create Database Tables & Seed Data
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

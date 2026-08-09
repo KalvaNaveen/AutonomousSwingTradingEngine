@@ -31,11 +31,21 @@ namespace AutonomousTradingEngine.Services
             var symbolData = new Dictionary<string, List<Candle>>();
             foreach (var sym in watchlist)
             {
-                string ticker = sym.EndsWith(".NS") ? sym : $"{sym}.NS";
-                var candles = await _marketData.GetHistoricalDataAsync(ticker);
-                if (candles.Count >= 50)
+                try
                 {
-                    symbolData[sym] = candles.Where(c => c.Date >= request.StartDate && c.Date <= request.EndDate).ToList();
+                    string ticker = sym.EndsWith(".NS") ? sym : $"{sym}.NS";
+                    var candles = await _marketData.GetHistoricalDataAsync(ticker);
+                    
+                    // Safety check added: ensure candles is not null before checking Count
+                    if (candles != null && candles.Count >= 50)
+                    {
+                        symbolData[sym] = candles.Where(c => c.Date >= request.StartDate && c.Date <= request.EndDate).ToList();
+                    }
+                }
+                catch (Exception)
+                {
+                    // Skip symbol if Yahoo Finance fails for it, keeping the backtest alive
+                    continue;
                 }
             }
 
